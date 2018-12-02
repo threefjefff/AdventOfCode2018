@@ -2,7 +2,7 @@
 open System.IO
 module Day1 = 
     let readFile filepath =
-        File.ReadAllLines filepath |> List.ofSeq |> List.map int
+        File.ReadAllLines filepath |> Seq.map int
 
     let inputAsInts args =
         match args with
@@ -10,38 +10,33 @@ module Day1 =
             printfn "Attempting to read filepath %s" filepath
             readFile filepath
         | _ ->
-            List.map int args 
+            Seq.map int args 
 
-    let runningTotal (inputs: int list) =
+    let runningTotal (inputs: int seq) =
         inputs 
-        |> List.mapFold (fun total next -> (total + next, total + next)) 0
-   
-    type ResultOrList = Result of int option | List of int list
+        |> Seq.mapFold (fun total next -> (total + next, total + next)) 0
+        |> fst
 
-    let rec findDuplicate list:ResultOrList =
-        match list with
-        | first::tail ->
-            match List.exists (fun x -> x = first) tail with
-            | true ->
-                Result first
-            | false ->
-                match findDuplicate tail with
-                    | Result x ->
-                        match x with
-                        | None ->
-                            findDuplicate (list::list)
-        | [] ->
-            Result None
+    //Credit goes to reddit. I am a bad person.
+    //1. After a set repeats, it's increases all values by the offset
+    //2. The first repeated value has to be in the original set 
+    //Therefore. Get the original sequence, find the offset, search the offset values for a match, continue offsetting till you do
+    let findRepetition changes =
+        let runningTotal = //Find the original sequence
+            Seq.scan (+) 0 changes
+            |> Seq.tail
+            |> Seq.toArray
+        let possibleValues = Set.ofArray runningTotal //And keep them, because we know the answer is one of these
+        let offset = Array.last runningTotal //Find the offset (the last value of the running total)
+        let rec iterate sums =
+            let newSums = (Array.map ((+) offset) sums) //Get the new offset sequence
+            let firstMatch = Array.tryFind (fun i -> Set.contains i possibleValues) newSums //Try to get a value
+            match firstMatch with
+            | Some x -> x //Stop if you find one
+            | None -> iterate newSums //Or go for another rotation if you don't
+        iterate runningTotal
 
     let execute (args: string list)=
-        let result = inputAsInts args |> runningTotal
-        result
-        |> printfn "%A"
-        result 
-        |> snd 
-        |> printfn "Total is %d"
-        result 
-        |> fst 
-        |> findDuplicate
-        |> printfn "First duplicate is %A"
+        inputAsInts args |> Seq.sum |> printfn "Total is %d"
+        inputAsInts args |> findRepetition |> printfn "First duplicate is %O"
         
