@@ -15,23 +15,33 @@ module Day1 =
     let runningTotal (inputs: int list) =
         inputs 
         |> List.mapFold (fun total next -> (total + next, total + next)) 0
+   
+    type ResultOrList = Result of int option | List of int list
 
-    let rec findDuplicate list =
+    let rec findDuplicate list:ResultOrList =
         match list with
         | first::tail ->
-            match List.exists (fun x -> x == first) tail with
+            match List.exists (fun x -> x = first) tail with
             | true ->
-                Some(first)
+                Result first
             | false ->
-                findDuplicate tail
+                match findDuplicate tail with
+                    | Result x ->
+                        match x with
+                        | None ->
+                            findDuplicate (list::list)
         | [] ->
-            None
+            Result None
 
     let execute (args: string list)=
         let result = inputAsInts args |> runningTotal
-        result |> snd |> printfn "Total is %d"
+        result
+        |> printfn "%A"
+        result 
+        |> snd 
+        |> printfn "Total is %d"
         result 
         |> fst 
         |> findDuplicate
-        |> printfn "Running list is %A"
+        |> printfn "First duplicate is %A"
         
