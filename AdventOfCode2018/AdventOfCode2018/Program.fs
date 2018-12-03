@@ -12,6 +12,9 @@ let executeDay day args =
     | 1 ->
         printfn "day 1, args: %A" args
         Day1.execute args
+    | 2 ->
+        printfn "day 2, args: %A" args
+        Day2.execute args
     | _ ->
         printfn "This day isn't ready yet!"
 
